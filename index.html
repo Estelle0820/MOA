@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>jsPsych Video Memory Trial</title>
+  <script src="https://unpkg.com/jspsych@7.3.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-video"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-likert"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form"></script>
+  <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
+  <style>
+    .video-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+    .video-option {
+      flex: 1 1 45%;
+      margin: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<script>
+  const jsPsych = initJsPsych({
+    on_finish: () => jsPsych.data.displayData()
+  });
+
+  const timeline = [];
+
+  // Show the target video
+  timeline.push({
+    type: jsPsych.video,
+    stimulus: ['https://drive.google.com/uc?export=download&id=11m0HXXVrvQYHOhWKj9HZKeATdClX53SE'],
+    width: 720,
+    autoplay: true,
+    controls: true
+  });
+
+  // Likert rating
+  timeline.push({
+    type: jsPsych.survey_likert,
+    questions: [{
+      prompt: "How much did you like the clip you just watched?",
+      labels: ["0 (Not at all)", "1", "2", "3", "4 (Very much)"],
+      required: true
+    }],
+    scale_width: 500
+  });
+
+  // Binary question
+  timeline.push({
+    type: jsPsych.survey-html-form,
+    html: '<p>Did the visual and auditory motion start together?</p>' +
+          '<p><label><input type="radio" name="sync" value="Yes" required> Yes</label></p>' +
+          '<p><label><input type="radio" name="sync" value="No"> No</label></p>'
+  });
+
+  // 4AFC Video Memory Task
+  timeline.push({
+    type: jsPsych.survey-html-form,
+    html: `
+      <p><strong>Which of the following videos matches the one you just watched?</strong></p>
+      <div class="video-grid">
+        <div class="video-option">
+          <iframe height="250" width="100%" src="https://drive.google.com/file/d/12tc4L_pT3FVO6OYrzNXzm0A5KJ3vkF7A/preview"></iframe>
+          <p><label><input type="radio" name="memory_choice" value="A" required> Video A</label></p>
+        </div>
+        <div class="video-option">
+          <iframe height="250" width="100%" src="https://drive.google.com/file/d/1G_6t1lknLLXVsdF3cTsgiw8_vas0W_HB/preview"></iframe>
+          <p><label><input type="radio" name="memory_choice" value="B"> Video B</label></p>
+        </div>
+        <div class="video-option">
+          <iframe height="250" width="100%" src="https://drive.google.com/file/d/1SfqcqR0zSNJlkA9rojbkQSr59u0l0u5I/preview"></iframe>
+          <p><label><input type="radio" name="memory_choice" value="C"> Video C</label></p>
+        </div>
+        <div class="video-option">
+          <iframe height="250" width="100%" src="https://drive.google.com/file/d/1DucGVH9W2MY5xG5eyDWhD1NBDTd2RiBZ/preview"></iframe>
+          <p><label><input type="radio" name="memory_choice" value="D"> Video D</label></p>
+        </div>
+      </div>
+      `,
+    button_label: 'Submit'
+  });
+
+  jsPsych.run(timeline);
+</script>
+</body>
+</html>
