@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>jsPsych Video Memory Trial</title>
+  <script src="https://unpkg.com/jspsych@7.3.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-video"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-likert"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-preload"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-fullscreen"></script>
+  <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
+  <style>
+    .video-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+    .video-option {
+      flex: 1 1 45%;
+      margin: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<script>
+  const jsPsych = initJsPsych({
+    on_finish: () => jsPsych.data.displayData()
+  });
+
+  const timeline = [];
+
+  // Fullscreen
+  timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: true
+  });
+
+  // Preload all videos
+  timeline.push({
+    type: jsPsychPreload,
+    video: [
+      'https://drive.google.com/uc?export=download&id=11m0HXXVrvQYHOhWKj9HZKeATdClX53SE',
+      'https://drive.google.com/uc?export=download&id=12tc4L_pT3FVO6OYrzNXzm0A5KJ3vkF7A',
+      'https://drive.google.com/uc?export=download&id=1G_6t1lknLLXVsdF3cTsgiw8_vas0W_HB',
+      'https://drive.google.com/uc?export=download&id=1SfqcqR0zSNJlkA9rojbkQSr59u0l0u5I',
+      'https://drive.google.com/uc?export=download&id=1DucGVH9W2MY5xG5eyDWhD1NBDTd2RiBZ'
+    ]
+  });
+
+  // Show the target video
+  timeline.push({
+    type: jsPsychVideo,
+    stimulus: ['https://drive.google.com/uc?export=download&id=11m0HXXVrvQYHOhWKj9HZKeATdClX53SE'],
+    width: 720,
+    autoplay: true,
+    controls: true
+  });
+
+  // Likert rating
+  timeline.push({
+    type: jsPsychSurveyLikert,
+    questions: [{
+      prompt: "How much did you like the clip you just watched?",
+      labels: ["0 (Not at all)", "1", "2", "3", "4 (Very much)"],
+      required: true
+    }],
+    scale_width: 500
+  });
+
+  // Binary question
+  timeline.push({
+    type: jsPsychSurveyHtmlForm,
+    html: '<p>Did the visual and auditory motion start together?</p>' +
+          '<p><label><input type="radio" name="sync" value="Yes" required> Yes</label></p>' +
+          '<p><label><input type="radio" name="sync" value="No"> No</label></p>'
+  });
+
+  // Memory options randomized
+  const memoryOptions = jsPsych.randomization.shuffle([
+    { id: '12tc4L_pT3FVO6OYrzNXzm0A5KJ3vkF7A', label: 'A' },
+    { id: '1G_6t1lknLLXVsdF3cTsgiw8_vas0W_HB', label: 'B' },
+    { id: '1SfqcqR0zSNJlkA9rojbkQSr59u0l0u5I', label: 'C' },
+    { id: '1DucGVH9W2MY5xG5eyDWhD1NBDTd2RiBZ', label: 'D' }
+  ]);
+
+  let memoryHTML = '<p><strong>Which of the following videos matches the one you just watched?</strong></p><div class="video-grid">';
+  memoryOptions.forEach(opt => {
+    memoryHTML += `
+      <div class="video-option">
+        <video autoplay loop muted playsinline width="100%" height="250">
+          <source src="https://drive.google.com/uc?export=download&id=${opt.id}" type="video/mp4">
+        </video>
+        <p><label><input type="radio" name="memory_choice" value="${opt.label}" required> Video ${opt.label}</label></p>
+      </div>`;
+  });
+  memoryHTML += '</div>';
+
+  timeline.push({
+    type: jsPsychSurveyHtmlForm,
+    html: memoryHTML,
+    button_label: 'Submit'
+  });
+
+  jsPsych.run(timeline);
+</script>
+</body>
+</html>
