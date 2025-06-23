@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>jsPsych Video Memory Trial</title>
+  <script src="https://unpkg.com/jspsych@7.3.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-video"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-likert"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-html-form"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-preload"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-fullscreen"></script>
+  <link href="https://unpkg.com/jspsych@7.3.0/css/jspsych.css" rel="stylesheet" />
+  <style>
+    .video-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+    .video-option {
+      flex: 1 1 45%;
+      margin: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<script>
+  const jsPsych = initJsPsych({
+    on_finish: () => {
+      const pid = jsPsych.data.get().values()[0].participant_id || 'no_id';
+      jsPsych.data.get().localSave('csv', `memory_experiment_${pid}.csv`);
+    }
+  });
+
+  const timeline = [];
+
+  // Collect participant ID
+  timeline.push({
+    type: jsPsychSurveyHtmlForm,
+    preamble: '<p>Please enter your participant ID:</p>',
+    html: '<input name="participant_id" type="text" required>',
+    on_finish: data => {
+      jsPsych.data.addProperties({ participant_id: data.response.participant_id });
+    }
+  });
+
+  // Fullscreen
+  timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: true
+  });
+
+  // Updated Dropbox video links
+  const videoLinks = {
+    target: 'https://www.dropbox.com/scl/fi/trpkzc2tco69ibv4zuixo/dog7slr.mp4?rlkey=fepsyhyxvb78dft6mu44lta1d&raw=1',
+    A: 'https://www.dropbox.com/scl/fi/d6p22xux11c4wtu60bqf4/lr_0.7.mov?rlkey=lgkfxxl3zriw6ixaaov4qxj4z&raw=1',
+    B: 'https://www.dropbox.com/scl/fi/noo195h5agf32ca1ngeaw/lr_ori.mp4?rlkey=et3rpkbuubnppv8eaeg5wifqy&raw=1',
+    C: 'https://www.dropbox.com/scl/fi/noo195h5agf32ca1ngeaw/lr_ori.mp4?rlkey=et3rpkbuubnppv8eaeg5wifqy&raw=1',
+    D: 'https://www.dropbox.com/scl/fi/a3yg0lem4sp4nsk9culim/rl_ori.mp4?rlkey=yc2alam43dnjdpwd19txiwvpl&raw=1'
+  };
+
+  // Preload all videos
+  timeline.push({
+    type: jsPsychPreload,
+    video: Object.values(videoLinks)
+  });
+
+  // Show the target video
+  timeline.push({
+    type: jsPsychVideo,
+    stimulus: [videoLinks.target],
+    width: 720,
+    autoplay: true,
+    controls: true,
+    data: { trial_type: 'target_video' }
+  });
+
+  // Likert rating
+  timeline.push({
+    type: jsPsychSurveyLikert,
+    questions: [{
+      prompt: "How much did you like the clip you just watched?",
+      labels: ["0 (Not at all)", "1", "2", "3", "4 (Very much)"],
+      required: true
+    }],
+    scale_width: 500,
+    data: { trial_type: 'liking_rating' }
+  });
+
+  // Binary question
+  timeline.push({
+    type: jsPsychSurveyHtmlForm,
+    html: '<p>Did the visual and auditory motion start together?</p>' +
+          '<p><label><input type="radio" name="sync" value="Yes" required> Yes</label></p>' +
+          '<p><label><input type="radio" name="sync" value="No"> No</label></p>',
+    data: { trial_type: 'synchrony_check' }
+  });
+
+  // Memory options randomized
+  const memoryOptions = jsPsych.randomization.shuffle([
+    { url: videoLinks.A, label: 'A' },
+    { url: videoLinks.B, label: 'B' },
+    { url: videoLinks.C, label: 'C' },
+    { url: videoLinks.D, label: 'D' }
+  ]);
+
+  let memoryHTML = '<p><strong>Which of the following videos matches the one you just watched?</strong></p><div class="video-grid">';
+  memoryOptions.forEach(opt => {
+    memoryHTML += `
+      <div class="video-option">
+        <video autoplay loop muted playsinline width="100%" height="250">
+          <source src="${opt.url}" type="video/mp4">
+        </video>
+        <p><label><input type="radio" name="memory_choice" value="${opt.label}" required> Video ${opt.label}</label></p>
+      </div>`;
+  });
+  memoryHTML += '</div>';
+
+  timeline.push({
+    type: jsPsychSurveyHtmlForm,
+    html: memoryHTML,
+    button_label: 'Submit',
+    data: {
+      trial_type: 'memory_test',
+      correct_answer: 'B' // manually note correct answer for analysis
+    }
+  });
+
+  jsPsych.run(timeline);
+</script>
+</body>
+</html>
